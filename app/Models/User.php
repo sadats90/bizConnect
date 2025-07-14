@@ -22,6 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'tenant_id',
+        'team_id'
     ];
 
     /**
@@ -34,6 +36,17 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+public function tenant()
+{
+    return $this->belongsTo(Tenant::class);
+}
+
+public function team()
+{
+    return $this->belongsTo(Team::class);
+}
+
+
     /**
      * Get the attributes that should be cast.
      *
@@ -45,5 +58,30 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function scopeForCurrentTenant($query)
+        {
+            $tenant = app('currentTenant');
+
+            // If no tenant is set, block the query for safety
+            if (!$tenant) {
+                return $query->whereRaw('0 = 1'); // Return no results
+            }
+
+            return $query->where('tenant_id', $tenant->id);
+        }
+
+
+
+          public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    // Helper method to check if user has a role
+    public function hasRole($roleName)
+    {
+        return $this->roles()->where('name', $roleName)->exists();
     }
 }

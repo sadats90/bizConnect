@@ -15,21 +15,28 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request)
     {   
-        // for frontend
-        // $request->authenticate();
+      // Authenticate user credentials
+    $request->authenticate();
 
-        // $request->session()->regenerate();
+    $user = Auth::user();
 
-        // return response()->noContent();
-         $request->authenticate();
+    // Get current tenant from middleware
+    $tenant = app('currentTenant');
 
-        $user = Auth::user();
-
-        $token = $user->createToken('api_token')->plainTextToken;
-
+    // Check if tenant is set and matches user's tenant_id
+    if (!$tenant || $user->tenant_id !== $tenant->id) {
+        Auth::logout(); // logout user if tenant mismatch
         return response()->json([
-            'user' => $user,
-            'token' => $token,
+            'message' => 'Invalid tenant for this user.'
+        ], 403); // Forbidden
+    }
+
+    // Create API token after tenant validation
+    $token = $user->createToken('api_token')->plainTextToken;
+
+    return response()->json([
+        'user' => $user,
+        'token' => $token,
     ]);
 
     }

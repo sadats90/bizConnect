@@ -1,5 +1,6 @@
 <?php
 
+
 declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
@@ -17,13 +18,14 @@ class CreateTenantUserImpersonationTokensTable extends Migration
     {
         Schema::create('tenant_user_impersonation_tokens', function (Blueprint $table) {
             $table->string('token', 128)->primary();
-            $table->string('tenant_id');
-            $table->string('user_id');
+
+            // Fix: use foreignId instead of string
+            $table->foreignId('tenant_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+
             $table->string('auth_guard');
             $table->string('redirect_url');
             $table->timestamp('created_at');
-
-            $table->foreign('tenant_id')->references('id')->on('tenants')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
